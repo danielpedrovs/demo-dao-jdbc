@@ -12,6 +12,7 @@ public class Program {
 		
 		SellerDao sellerDao = DaoFactory.CreateSellerDao();
 		
+		System.out.println("==== TEST 1: seller findById =======");
 		Seller seller  = sellerDao.findbyid(3);
 		
 		System.out.println(seller);
