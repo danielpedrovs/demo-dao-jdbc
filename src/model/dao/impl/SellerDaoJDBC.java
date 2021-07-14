@@ -4,7 +4,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import db.DB;
 import db.DbException;
 import model.dao.SellerDao;
@@ -19,6 +23,8 @@ public class SellerDaoJDBC implements SellerDao{
 		this.conn = conn;
 		
 	}
+	 
+			
 
 	@Override
 	public void insert(Seller obj) {
@@ -37,6 +43,7 @@ public class SellerDaoJDBC implements SellerDao{
 		// TODO Auto-generated method stub
 		
 	}
+	
 
 	@Override
 	public Seller findbyid(Integer id) {
@@ -56,8 +63,6 @@ public class SellerDaoJDBC implements SellerDao{
 			
 			if(rs.next()) {
 						Department dep = InstantiateDepartment(rs);
-						
-						 
 						Seller obj = InstatiateSeller(rs,dep);
 						return obj;
 						
@@ -94,13 +99,67 @@ public class SellerDaoJDBC implements SellerDao{
 		return dep;
 		 
 	}
-	
+
 	
 	@Override
 	public List<Seller> findAll() {
 		
 		return null;
 	}
+
+
+	@Override
+	public List<Seller> findByDepartment(Department department) {
+			
+
+		PreparedStatement st=null;
+		ResultSet rs = null;
+		
+		try {
+			st = conn.prepareStatement("SELECT seller.*,department.Name as DepName " 
+										+"from seller inner join department " 
+										+"ON seller.DepartmentId = Department.Id "
+										+"where DepartmentId = ? "
+										+"order by Name "
+							);
+			
+			
+			st.setInt(1, department.getId());
+			rs = st.executeQuery();
+			List <Seller> list = new ArrayList<>();
+			Map<Integer,Department> map = new HashMap<>();  
+			
+			while(rs.next()) {
+				//test if the object Department really exist:
+				Department dep = map.get(rs.getInt("DepartmentId"));
+				//include test//
+				if(dep == null) {
+					dep = InstantiateDepartment(rs);
+					map.put(rs.getInt("DepartmentId"), dep);
+				}
+				//instance for Department was created inside of the if//
+				//inserted controller for avoid each object Seller create an object Department and 2 object seller point to
+				//one department, creating map//
+				//create a void map and keep any Departments there//
+				//we will test every Department throw map.//
+				Seller obj = InstatiateSeller(rs,dep);
+				list.add(obj);
+					
+						
+		}
+			return list;
+			
+	}
+		catch (SQLException e) {
+			throw new DbException(e.getMessage());
+			}
+		finally {
+			DB.closeStatement(st);
+			DB.closeResultSet(rs);
+			}
+	}
+
 	
-}
+}	
+
 
